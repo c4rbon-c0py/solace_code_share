@@ -9,6 +9,15 @@ import { useResizeObserver } from "../../hooks/useResizeObserver";
 import BaseGridEndRow from "./GridCellManager/BaseGridEndRow";
 import { useHasScroll } from "../../hooks/useHasScroll";
 
+/* SOLACE COMMENTARY:
+    This component is part of a larger group of components that work together to generate a grid that is capable of rendering large amount of data via windowing. This solution was developed inhouse primarly because 
+    we had the need to customize the rendered rows with dynamic heights or other dynamic needs. Additionally, product owners wanted the ability to control the content view the database with ease. Products do 
+    exist that support these mechanisms but they are hard to develop agaisnt as they are built generically.
+
+    I've only included this component specifically as the entire codebase it self is hosted on Azure DevOps and is private. I've removed some additional functions out of this sample and changed some names that relate to 
+    the business and it's competitors out of respect to company.
+*/
+
 // I added this here for future use. Maybe there would be a use case in the future when we would want to control these variables from the server or fine tune performance for easier use.
 const RENDER_PROCESSOR_CONFIGURATIONS = {
   ROW_HEIGHT: 49, // These are directly tied to the height in the CSS for base_grid_row
@@ -25,6 +34,11 @@ type BaseGridRenderProcessorScrollState = {
 type BaseGridRenderProcessor_v3_Properties = {
   uiid?: string;
 };
+
+/* SOLACE COMMENTARY: 
+    Notice the component name BaseGridRenderProcessor_v3. This specific component has obviously gone through several iterations. The previous version although it worked and was stable, didn't perform as well as version 3.
+    There was a notiable delay/stutter/freezing in scrolling on v2. However, we held onto v2 in the event we needed to roll back for some reason (it fully moved forward and v2 was removed after about 2 months I believe). 
+  */
 
 const BaseGridRenderProcessor_v3: FC<BaseGridRenderProcessor_v3_Properties> = ({
   uiid = "NO_UIID_FOUND",
@@ -50,6 +64,9 @@ const BaseGridRenderProcessor_v3: FC<BaseGridRenderProcessor_v3_Properties> = ({
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [scrollEvent, setScrollEvent] = useState<any>(null);
 
+  /* SOLACE COMMENTARY: 
+      I needed to suppress the noise that the window scroll event produced but I still wanted the end event response so I created this hook to do just that.
+  */
   const debouncedScrollEvent = useDebounce(scrollEvent, 20);
 
   const totalRows = internalInstance?.sortedAndFilteredData.length ?? 0;
