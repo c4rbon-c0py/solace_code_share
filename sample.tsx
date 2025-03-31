@@ -10,7 +10,7 @@ import BaseGridEndRow from "./GridCellManager/BaseGridEndRow";
 import { useHasScroll } from "../../hooks/useHasScroll";
 
 /* SOLACE COMMENTARY:
-    This component is part of a larger group of components that work together to generate a grid that is capable of rendering large amount of data via windowing. This solution was developed inhouse primarly because 
+    This component is part of a larger group of components that work together to generate a grid that is capable of rendering large amounts of data via windowing. This solution was developed inhouse primarly because 
     we had the need to customize the rendered rows with dynamic heights or other dynamic needs. Additionally, product owners wanted the ability to control the content view the database with ease. Products do 
     exist that support these mechanisms but they are hard to develop agaisnt as they are built generically.
 
@@ -71,6 +71,10 @@ const BaseGridRenderProcessor_v3: FC<BaseGridRenderProcessor_v3_Properties> = ({
 
   const totalRows = internalInstance?.sortedAndFilteredData.length ?? 0;
 
+    /* SOLACE COMMENTARY: 
+        Notice that many of the functions here use useCallback. I do this because they are either directly referenced in the resulting "return" HTML or have some general expense to them
+        that would otherwise lock up during the react render lifecycle process and stall rendering a bit.
+    */
   const calcGridHeight = useCallback(
     () => totalRows * RENDER_PROCESSOR_CONFIGURATIONS.ROW_HEIGHT,
     [totalRows]
@@ -90,6 +94,17 @@ const BaseGridRenderProcessor_v3: FC<BaseGridRenderProcessor_v3_Properties> = ({
     }
   }, []);
 
+/* SOLACE COMMENTARY: 
+    This probably does the most magical part and something I'm really proud of. Without going through it too much, it basically calculates the window-scroll relative to the the content in the center,
+    on the top, and on the bottom.
+
+    There is an element called "wrapperRef", which has a height set to it. Again it's the height calculated by the RowHeight[49] * NumberOfRows. This height is fixed for the duration of the grids extistance,
+    which gives the user the impression they are looking at a fully loaded grid when infact they are only looking at roughly 60 rows of data.
+
+    Once "calculateVisibleRange" starts it's calculation, it uses "wrapperRef" (scrollTop and clientHeight properties) as guide to determine where the user is in the scroll zone and calculates what rows
+    from the data that should be rendered once the scroll event stops.
+*/
+    
   // Calculate visible rows based on scroll position
   const calculateVisibleRange = useCallback(
     (
@@ -163,6 +178,19 @@ const BaseGridRenderProcessor_v3: FC<BaseGridRenderProcessor_v3_Properties> = ({
     return true;
   }, [calculateVisibleRange]);
 
+    /* SOLACE COMMENTARY:
+        The function "renderedRows", is pretty expensive to execute, so I wrapped it in a useMemo hook to save the page from dying. 
+        It basically takes a large complex component "BaseGridCellManager" and renders a group of them and spits them out on the page which is what the end user sees a list of rows.
+        It listens for a few things things to trigger it's rendering update. One of them being the "scroll" event. So when a user scrolls the "updateCalculationRangeCallback" executes
+        and causes a scroll calculation to determine where in the calculated height should the next set of rows render.
+
+        One thing I should note, our data sets we're relatively small per customer and so most of the data the user was seeing was all loaded upfront and not pageinated. At most
+        the amount of data that was loaded was about 30,000 rows but on average was closer to around 500 - 1000 rows of data.
+
+        The grid system can do "pagination" but only one via SQL because it can be fed just chunks of data rather than the whole lot but prodcut owners prefered it this way.
+
+        I can elaborate on additional details about this thought process given the time.
+    */
   const renderedRows = useMemo(() => {
     const visibleData = internalInstance.sortedAndFilteredData.slice(
       scrollState.startIndex,
@@ -255,6 +283,10 @@ const BaseGridRenderProcessor_v3: FC<BaseGridRenderProcessor_v3_Properties> = ({
         className={styles.true_base_grid_scroll_height}
         ref={scrollRef}
         style={{
+            /* SOLACE COMMENTARY: 
+                This creates an effect that gives the grid an artifical height based on the number of possible rows that can be rendered. 
+                So (RowCount[5000] * RowHeight[49]). Rememeber, only about 60 are so rows are actually renedered however.  
+            */
           height: `${calcGridHeight()}px`,
         }}
       ></div>
@@ -263,5 +295,9 @@ const BaseGridRenderProcessor_v3: FC<BaseGridRenderProcessor_v3_Properties> = ({
 };
 
 export default BaseGridRenderProcessor_v3;
+
+/* SOLACE COMMENTARY:
+    Theres so much more I could go into detail about but I will say that this chunk of code was done back in 2024, roughly in November and it is really something i'm happy about.
+*/
 
 rubber duck
