@@ -297,7 +297,12 @@ const BaseGridRenderProcessor_v3: FC<BaseGridRenderProcessor_v3_Properties> = ({
 export default BaseGridRenderProcessor_v3;
 
 /* SOLACE COMMENTARY:
-    Theres so much more I could go into detail about but I will say that this chunk of code was done back in 2024, roughly in November and it is really something i'm happy about.
+    Theres so much more I could go into detail about but I will say that this chunk of code was done back in 2024, 
+    roughly in November and it is really something i'm happy about which is why I wanted to share it with you. Mostly because I developed part of v1 and all of v2,
+    and as I progressed through those versions, I felt like I just kept learning more and more about what issues we're going on in previous versions until I landed on this final version,
+    which is such a good feeling of progression and learning.
+
+    If only you could see it in action!
 */
 
 rubber duck
